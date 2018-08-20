@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>To Do Fancy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ"
+        crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container" align="center">
+            <form>
+                    <!-- Task -->
+                    <div class="form-group">
+                      <label for="addtask" class="text-white">Task</label>
+                      <input type="text" class="form-control" id="task" placeholder="Input Task" v-model="addtask">
+                    </div>
+                    <div class="form-row">
+                      <!-- Status -->
+                      <div class="form-group col-lg-6">
+                        <label for="addStatus" class="text-white">Status</label>
+                        <input type="text" class="form-control" id="addStatus" placeholder="Input Status" v-model="addStatus">
+                      </div>
+                       <!-- Date Done By -->
+                      <div class="form-group col-lg-6">
+                        <label for="addDoneBy" class="text-white">Done By</label>
+                        <input type="date" class="form-control" id="addDoneBy" v-model="addDoneBy">
+                      </div>
+                    </div>
+
+                      
+                    <button type="submit" class="btn btn-primary" v-on:click="addTask">Add Todo</button>
+                  </form>
+                  </div>
+                  <br>
+                  <br>
+        <div class="container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Done By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(todo, index) in todos" :key="index">
+                        <td>
+                            {{todo.task}}
+                        </td>
+                        <td>
+                            {{todo.status}}
+                        </td>
+                        <td>
+                            {{todo.doneBy}}
+                        </td>
+                        <td>
+                            <a href data-toggle="modal" data-target="#exampleModal" v-on:click="showTasks(todo)"><i class="far fa-edit"></i></a> | <a href v-on:click="deleteTask(todo._id)"><i class="far fa-trash-alt"></i></a>   
+                        </td> 
+                    </tr>
+
+                    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="exampleModalLabel">Edit Task</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                                  </button>
+                                </div>
+                                <!-- <div class="modal-body">
+                                  <form id="formEdit">
+                                    <label>Task: </label><br>
+                                    <input type="text" v-model="todo.task"><br>
+                                    <label>Status: </label><br>
+                                    <input type="text" v-model="todo.status"><br>
+                                    <label>Done By</label>
+                                    <input type="date" v-model="todo.doneBy"><br><br>
+                                  </form>
+                                </div> -->
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                  <button type="submit" class="btn btn-primary" data-dismiss="modal" id="btnsave" @click="editTask({id: todo._id, task: todo.task, status: todo.status, doneBy: todo.doneBy})">Save changes</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                todos: [], 
+                addtask: '', 
+                addStatus: '', 
+                addDoneBy: ''
+            },
+            created() {
+                this.showTasks()
+            },
+            methods: {
+                showTasks() {
+                    let token = localStorage.getItem('token')
+                    // console.log(token)
+                    axios.get('http://localhost:3000/todos',
+                        {
+                            headers: {
+                                token: token
+                            }
+                        })
+                        .then(tasks => {
+                            console.log("data", tasks.data.data)
+                            this.todos = tasks.data.data
+                        })
+                        .catch(err => {
+                            console.log(err.message)
+                        })
+                }, 
+
+                editTask(input) {
+                    let token = localStorage.getItem('token')
+                    axios.put(`http://localhost:3000/todos/${input}`, {
+                        task: input.task, 
+                        status: input.status,
+                        doneBy: input.doneBy
+                    }, {
+                        headers: {
+                            token: token
+                        }
+                    })
+                    .then(editTask => {
+                        alert(`Successfully edited data!`)
+                    })
+                    .catch(err => {
+                        alert(err.message, `Input required!`)
+                    })
+                }, 
+                
+                deleteTask(input) {
+                    // console.log(input)
+                    let token = localStorage.getItem('token')
+                    axios.delete(`http://localhost:3000/todos/${input}`, {
+                        headers: {
+                            token: token
+                        }
+                    })
+                    .then(deleted => {
+                        alert(`Task deleted!`)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+                }, 
+
+                addTask() {
+                    let token = localStorage.getItem('token')
+                    axios.post('http://localhost:3000/todos', {
+                        task: this.addtask, 
+                        status: this.addStatus, 
+                        doneBy: this.addDoneBy
+                    }, {
+                        headers: {
+                            token: token
+                        }
+                    })
+                    .then(taskAdded => {
+                        alert(`Task successfully added!`)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+
+
+</html>
